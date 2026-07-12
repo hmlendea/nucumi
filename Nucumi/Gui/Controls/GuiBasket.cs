@@ -1,7 +1,6 @@
 using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using NuciXNA.Graphics.Drawing;
 using NuciXNA.Gui.Controls;
 using NuciXNA.Primitives;
 
@@ -10,10 +9,10 @@ namespace Nucumi.Gui.Controls
     internal sealed class GuiBasket : GuiControl
     {
         private static int SpriteFrameSize => 240;
-        private static int MaxFrameIndex => 12;
+        private static int MaxFrameIndex => 14;
 
         private GuiImage basketImage;
-        private GuiText walnutCountText;
+        private GuiLabel walnutCountLabel;
 
         public int BoardIndex { get; set; }
 
@@ -30,14 +29,9 @@ namespace Nucumi.Gui.Controls
                 ContentFile = "board/basket"
             };
 
-            walnutCountText = new GuiText
-            {
-                FontName = "DefaultFont",
-                HorizontalAlignment = Alignment.Middle,
-                VerticalAlignment = Alignment.Middle
-            };
+            walnutCountLabel = new GuiLabel();
 
-            RegisterChildren(basketImage, walnutCountText);
+            RegisterChildren(basketImage, walnutCountLabel);
             SetChildrenProperties();
         }
 
@@ -67,24 +61,6 @@ namespace Nucumi.Gui.Controls
 
                     break;
 
-                case LabelPlacement.Left:
-                    int leftLabelWidth = Size.Width - Size.Width * 3 / 4;
-                    spriteLocation = new Point2D(leftLabelWidth, 0);
-                    spriteSize = new Size2D(Size.Width * 3 / 4, Size.Height);
-                    labelLocation = Point2D.Empty;
-                    labelSize = new Size2D(leftLabelWidth, Size.Height);
-
-                    break;
-
-                case LabelPlacement.Right:
-                    int rightLabelWidth = Size.Width - Size.Width * 3 / 4;
-                    spriteLocation = Point2D.Empty;
-                    spriteSize = new Size2D(Size.Width * 3 / 4, Size.Height);
-                    labelLocation = new Point2D(Size.Width * 3 / 4, 0);
-                    labelSize = new Size2D(rightLabelWidth, Size.Height);
-
-                    break;
-
                 default: // Below.
                     spriteLocation = Point2D.Empty;
                     spriteSize = new Size2D(Size.Width, Size.Height * 3 / 4);
@@ -97,12 +73,20 @@ namespace Nucumi.Gui.Controls
             basketImage.Location = spriteLocation;
             basketImage.Size = spriteSize;
             basketImage.SourceRectangle = new Rectangle2D(frameIndex * SpriteFrameSize, 0, SpriteFrameSize, SpriteFrameSize);
-            basketImage.TintColour = IsSelectable && IsHovered ? new Colour(255, 220, 80) : Colour.White;
 
-            walnutCountText.Location = labelLocation;
-            walnutCountText.Size = labelSize;
-            walnutCountText.Text = WalnutCount.ToString();
-            walnutCountText.ForegroundColour = Colour.Black;
+            if (IsSelectable && IsHovered)
+            {
+                basketImage.TintColour = new Colour(255, 220, 80);
+            }
+            else
+            {
+                basketImage.TintColour = Colour.White;
+            }
+
+            walnutCountLabel.Location = labelLocation;
+            walnutCountLabel.Size = labelSize;
+            walnutCountLabel.BackgroundWidth = labelSize.Width;
+            walnutCountLabel.Text = WalnutCount.ToString();
         }
     }
 }

@@ -10,7 +10,7 @@ using NuciXNA.Primitives;
 using Nucumi.Gui.Controls;
 using Nucumi.Model;
 
-namespace Nucumi.Screens
+namespace Nucumi.Gui.Screens
 {
     internal sealed class GameScreen : Screen
     {
