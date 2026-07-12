@@ -17,8 +17,8 @@ namespace Nucumi
         {
             graphicsDeviceManager = new GraphicsDeviceManager(this)
             {
-                PreferredBackBufferWidth = 1280,
-                PreferredBackBufferHeight = 720
+                PreferredBackBufferWidth = 1536,
+                PreferredBackBufferHeight = 1024
             };
             Content.RootDirectory = "Content";
             IsMouseVisible = true;

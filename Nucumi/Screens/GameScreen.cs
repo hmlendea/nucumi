@@ -18,6 +18,7 @@ namespace Nucumi.Screens
         private static Colour Player2Colour => new(70, 130, 220);
 
         private readonly Board board;
+        private GuiImage backgroundImage;
         private GuiGameBoard boardControl;
         private GuiText player1Label;
         private GuiText player2Label;
@@ -31,12 +32,13 @@ namespace Nucumi.Screens
 
         protected override void DoLoadContent()
         {
+            backgroundImage = new GuiImage { ContentFile = "board/background" };
             boardControl = new GuiGameBoard(board);
             player1Label = new GuiText { FontName = "DefaultFont" };
             player2Label = new GuiText { FontName = "DefaultFont" };
             statusText = new GuiText { FontName = "DefaultFont" };
 
-            GuiManager.Instance.RegisterControls(boardControl, player1Label, player2Label, statusText);
+            GuiManager.Instance.RegisterControls(backgroundImage, boardControl, player1Label, player2Label, statusText);
             RegisterEvents();
             SetChildrenProperties();
         }
@@ -55,6 +57,9 @@ namespace Nucumi.Screens
         {
             int screenWidth = ScreenManager.Instance.Size.Width;
             int screenHeight = ScreenManager.Instance.Size.Height;
+
+            backgroundImage.Location = Point2D.Empty;
+            backgroundImage.Size = new Size2D(screenWidth, screenHeight);
             int boardWidth = GuiGameBoard.TotalWidth;
             int boardHeight = GuiGameBoard.TotalHeight;
             int boardX = (screenWidth - boardWidth) / 2;
