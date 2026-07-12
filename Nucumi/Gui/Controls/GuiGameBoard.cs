@@ -38,13 +38,13 @@ namespace Nucumi.Gui.Controls
         {
             List<IGuiControl> children = [];
 
-            player2Store = new GuiStore();
-            player1Store = new GuiStore();
+            player2Store = new GuiStore { LabelPlacement = LabelPlacement.Right };
+            player1Store = new GuiStore { LabelPlacement = LabelPlacement.Left };
 
             for (int columnIndex = 0; columnIndex < Board.BasketsPerPlayer; columnIndex++)
             {
-                player2Baskets[columnIndex] = new GuiBasket { BoardIndex = 12 - columnIndex };
-                player1Baskets[columnIndex] = new GuiBasket { BoardIndex = columnIndex };
+                player2Baskets[columnIndex] = new GuiBasket { BoardIndex = 12 - columnIndex, LabelPlacement = LabelPlacement.Below };
+                player1Baskets[columnIndex] = new GuiBasket { BoardIndex = columnIndex, LabelPlacement = LabelPlacement.Above };
             }
 
             children.Add(player2Store);
@@ -77,36 +77,46 @@ namespace Nucumi.Gui.Controls
             int boardWidth = Size.Width;
             int boardHeight = Size.Height;
             int basketSize = boardWidth * BasketSizeNumerator / TotalInnerWidthAtReference;
-            int horizontalGap = basketSize > 0 ? (boardWidth - 8 * basketSize) / (Board.BasketsPerPlayer + 1) : 0;
-            int columnWidth = basketSize + horizontalGap;
-            int rowGap = boardHeight - 2 * basketSize;
-            int storeVerticalOffset = basketSize + (rowGap - basketSize) / 2;
 
-            player2Store.Location = new Point2D(0, storeVerticalOffset);
-            player2Store.Size = new Size2D(basketSize, basketSize);
+            // Label area is 1/3 of the basket sprite size; total control extent = 4/3 * basketSize.
+            int labelExtent = basketSize / 3;
+            int basketControlHeight = basketSize + labelExtent;
+            int storeControlWidth = basketSize + labelExtent;
+            int storeY = (boardHeight - basketSize) / 2;
 
-            player1Store.Location = new Point2D(basketSize + horizontalGap + Board.BasketsPerPlayer * columnWidth, storeVerticalOffset);
-            player1Store.Size = new Size2D(basketSize, basketSize);
+            // Stores stay at the board edges.
+            player2Store.Location = new Point2D(0, storeY);
+            player2Store.Size = new Size2D(storeControlWidth, basketSize);
+
+            player1Store.Location = new Point2D(boardWidth - storeControlWidth, storeY);
+            player1Store.Size = new Size2D(storeControlWidth, basketSize);
+
+            // Baskets use a tighter gap and are centered as a group within the board width.
+            int basketGap = basketSize / 16;
+            int basketGroupWidth = Board.BasketsPerPlayer * basketSize + (Board.BasketsPerPlayer - 1) * basketGap;
+            int basketGroupStartX = (boardWidth - basketGroupWidth) / 2;
 
             for (int columnIndex = 0; columnIndex < Board.BasketsPerPlayer; columnIndex++)
             {
-                int basketX = basketSize + horizontalGap + columnIndex * columnWidth;
+                int basketX = basketGroupStartX + columnIndex * (basketSize + basketGap);
 
+                // P2 baskets (top row): sprite at top, label below.
                 player2Baskets[columnIndex].Location = new Point2D(basketX, 0);
-                player2Baskets[columnIndex].Size = new Size2D(basketSize, basketSize);
+                player2Baskets[columnIndex].Size = new Size2D(basketSize, basketControlHeight);
 
-                player1Baskets[columnIndex].Location = new Point2D(basketX, basketSize + rowGap);
-                player1Baskets[columnIndex].Size = new Size2D(basketSize, basketSize);
+                // P1 baskets (bottom row): label above, sprite at bottom.
+                player1Baskets[columnIndex].Location = new Point2D(basketX, boardHeight - basketControlHeight);
+                player1Baskets[columnIndex].Size = new Size2D(basketSize, basketControlHeight);
             }
         }
 
         private void UpdateControls()
         {
             player1Store.WalnutCount = board.GetWalnuts(Board.Player1StoreIndex);
-            player1Store.IsCurrentPlayerStore = board.CurrentPlayer.Equals(Player.Player1);
+            player1Store.IsCurrentPlayerStore = Equals(board.CurrentPlayer, Player.Player1);
 
             player2Store.WalnutCount = board.GetWalnuts(Board.Player2StoreIndex);
-            player2Store.IsCurrentPlayerStore = board.CurrentPlayer.Equals(Player.Player2);
+            player2Store.IsCurrentPlayerStore = Equals(board.CurrentPlayer, Player.Player2);
 
             for (int columnIndex = 0; columnIndex < Board.BasketsPerPlayer; columnIndex++)
             {
@@ -123,7 +133,7 @@ namespace Nucumi.Gui.Controls
 
         private void OnMouseButtonPressed(object sender, MouseButtonEventArgs mouseButtonEventArgs)
         {
-            if (!mouseButtonEventArgs.Button.Equals(MouseButton.Left))
+            if (!Equals(mouseButtonEventArgs.Button, MouseButton.Left))
             {
                 return;
             }

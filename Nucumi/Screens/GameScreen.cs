@@ -14,9 +14,6 @@ namespace Nucumi.Screens
 {
     internal sealed class GameScreen : Screen
     {
-        private static Colour Player1Colour => new(220, 120, 40);
-        private static Colour Player2Colour => new(70, 130, 220);
-
         private readonly Board board;
         private GuiImage backgroundImage;
         private GuiGameBoard boardControl;
@@ -77,31 +74,31 @@ namespace Nucumi.Screens
             player2Label.Size = new Size2D(boardWidth, labelHeight);
             player2Label.HorizontalAlignment = Alignment.Middle;
             player2Label.VerticalAlignment = Alignment.Middle;
-            player2Label.ForegroundColour = Player2Colour;
+            player2Label.ForegroundColour = Colour.Black;
             player2Label.Text = "Player 2";
 
             player1Label.Location = new Point2D(boardX, boardY + boardHeight + 8);
             player1Label.Size = new Size2D(boardWidth, labelHeight);
             player1Label.HorizontalAlignment = Alignment.Middle;
             player1Label.VerticalAlignment = Alignment.Middle;
-            player1Label.ForegroundColour = Player1Colour;
+            player1Label.ForegroundColour = Colour.Black;
             player1Label.Text = "Player 1";
 
             statusText.Location = new Point2D(0, screenHeight - statusHeight - 10);
             statusText.Size = new Size2D(screenWidth, statusHeight);
             statusText.HorizontalAlignment = Alignment.Middle;
             statusText.VerticalAlignment = Alignment.Middle;
-            statusText.ForegroundColour = Colour.White;
+            statusText.ForegroundColour = Colour.Black;
             statusText.Text = BuildStatusText();
         }
 
         private string BuildStatusText()
         {
-            if (!board.Phase.Equals(GamePhase.GameOver))
+            if (!Equals(board.Phase, GamePhase.GameOver))
             {
                 string currentPlayerName = "Player 1";
 
-                if (board.CurrentPlayer.Equals(Player.Player2))
+                if (Equals(board.CurrentPlayer, Player.Player2))
                 {
                     currentPlayerName = "Player 2";
                 }
@@ -127,7 +124,7 @@ namespace Nucumi.Screens
 
         private void OnKeyboardKeyPressed(object sender, KeyboardKeyEventArgs keyEventArgs)
         {
-            if (keyEventArgs.Key.Equals(Keys.R))
+            if (Equals(keyEventArgs.Key, Keys.R))
             {
                 board.Reset();
             }

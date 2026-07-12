@@ -31,6 +31,17 @@
 /processorParam:TextureFormat=Color
 /build:board/background.png
 
+#begin board/basket.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyEnabled=False
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:RotateFlipType=None
+/processorParam:TextureFormat=Color
+/build:board/basket.png
+
 #begin ScreenManager/FillImage.png
 /importer:TextureImporter
 /processor:TextureProcessor
