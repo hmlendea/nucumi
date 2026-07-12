@@ -84,24 +84,12 @@ namespace Nucumi.Gui.Controls
             children.Add(player1Store);
 
             RegisterChildren(children);
-
-            for (int basketIndex = 0; basketIndex < Board.BasketsPerPlayer; basketIndex++)
-            {
-                player1Baskets[basketIndex].Clicked += OnBasketClicked;
-                player2Baskets[basketIndex].Clicked += OnBasketClicked;
-            }
-
+            InputManager.Instance.MouseButtonPressed += OnMouseButtonPressed;
             UpdateControls();
         }
 
         protected override void DoUnloadContent()
-        {
-            for (int basketIndex = 0; basketIndex < Board.BasketsPerPlayer; basketIndex++)
-            {
-                player1Baskets[basketIndex].Clicked -= OnBasketClicked;
-                player2Baskets[basketIndex].Clicked -= OnBasketClicked;
-            }
-        }
+            => InputManager.Instance.MouseButtonPressed -= OnMouseButtonPressed;
 
         protected override void DoUpdate(GameTime gameTime) => UpdateControls();
 
@@ -128,19 +116,38 @@ namespace Nucumi.Gui.Controls
             }
         }
 
-        private void OnBasketClicked(object sender, MouseButtonEventArgs clickEventArgs)
+        private void OnMouseButtonPressed(object sender, MouseButtonEventArgs mouseButtonEventArgs)
         {
-            if (sender is not GuiBasket clickedBasket)
+            if (!mouseButtonEventArgs.Button.Equals(MouseButton.Left))
             {
                 return;
             }
 
-            if (!board.IsMoveAllowed(clickedBasket.BoardIndex))
+            for (int columnIndex = 0; columnIndex < Board.BasketsPerPlayer; columnIndex++)
             {
-                return;
-            }
+                GuiBasket player1Basket = player1Baskets[columnIndex];
+                GuiBasket player2Basket = player2Baskets[columnIndex];
 
-            board.Move(clickedBasket.BoardIndex);
+                if (player1Basket.DisplayRectangle.Contains(mouseButtonEventArgs.Location))
+                {
+                    if (board.IsMoveAllowed(player1Basket.BoardIndex))
+                    {
+                        board.Move(player1Basket.BoardIndex);
+                    }
+
+                    return;
+                }
+
+                if (player2Basket.DisplayRectangle.Contains(mouseButtonEventArgs.Location))
+                {
+                    if (board.IsMoveAllowed(player2Basket.BoardIndex))
+                    {
+                        board.Move(player2Basket.BoardIndex);
+                    }
+
+                    return;
+                }
+            }
         }
     }
 }
