@@ -16,14 +16,10 @@ namespace Nucumi.Gui.Controls
     // P2 basket in column c has board index 12 − c (so P2b5 = index 12 is leftmost).
     internal sealed class GuiGameBoard : GuiControl
     {
-        private static int BasketSize => 143;
-        private static int HorizontalGap => 17;
-        private static int RowGap => 477;
-        private static int ColumnWidth => BasketSize + HorizontalGap;
-        private static int StoreVerticalOffset => BasketSize + (RowGap - BasketSize) / 2;
-
-        public static int TotalWidth => 2 * BasketSize + HorizontalGap + Board.BasketsPerPlayer * ColumnWidth;
-        public static int TotalHeight => 2 * BasketSize + RowGap;
+        // Ratio BasketSize:HorizontalGap = 143:17 derived from the 1536×1024 reference image pixel analysis.
+        // 8 baskets + 2 stores + 7 horizontal gaps must fill the board width: 8*143 + 7*17 = 1263.
+        private static int BasketSizeNumerator => 143;
+        private static int TotalInnerWidthAtReference => 1263;
 
         private readonly Board board;
         private readonly GuiBasket[] player1Baskets;
@@ -42,35 +38,13 @@ namespace Nucumi.Gui.Controls
         {
             List<IGuiControl> children = [];
 
-            player2Store = new GuiStore
-            {
-                Location = new Point2D(0, StoreVerticalOffset),
-                Size = new Size2D(BasketSize, BasketSize)
-            };
-
-            player1Store = new GuiStore
-            {
-                Location = new Point2D(BasketSize + HorizontalGap + Board.BasketsPerPlayer * ColumnWidth, StoreVerticalOffset),
-                Size = new Size2D(BasketSize, BasketSize)
-            };
+            player2Store = new GuiStore();
+            player1Store = new GuiStore();
 
             for (int columnIndex = 0; columnIndex < Board.BasketsPerPlayer; columnIndex++)
             {
-                int basketX = BasketSize + HorizontalGap + columnIndex * ColumnWidth;
-
-                player2Baskets[columnIndex] = new GuiBasket
-                {
-                    BoardIndex = 12 - columnIndex,
-                    Location = new Point2D(basketX, 0),
-                    Size = new Size2D(BasketSize, BasketSize)
-                };
-
-                player1Baskets[columnIndex] = new GuiBasket
-                {
-                    BoardIndex = columnIndex,
-                    Location = new Point2D(basketX, BasketSize + RowGap),
-                    Size = new Size2D(BasketSize, BasketSize)
-                };
+                player2Baskets[columnIndex] = new GuiBasket { BoardIndex = 12 - columnIndex };
+                player1Baskets[columnIndex] = new GuiBasket { BoardIndex = columnIndex };
             }
 
             children.Add(player2Store);
@@ -85,15 +59,46 @@ namespace Nucumi.Gui.Controls
 
             RegisterChildren(children);
             InputManager.Instance.MouseButtonPressed += OnMouseButtonPressed;
-            UpdateControls();
         }
 
         protected override void DoUnloadContent()
             => InputManager.Instance.MouseButtonPressed -= OnMouseButtonPressed;
 
-        protected override void DoUpdate(GameTime gameTime) => UpdateControls();
+        protected override void DoUpdate(GameTime gameTime)
+        {
+            UpdateLayout();
+            UpdateControls();
+        }
 
         protected override void DoDraw(SpriteBatch spriteBatch) { }
+
+        private void UpdateLayout()
+        {
+            int boardWidth = Size.Width;
+            int boardHeight = Size.Height;
+            int basketSize = boardWidth * BasketSizeNumerator / TotalInnerWidthAtReference;
+            int horizontalGap = basketSize > 0 ? (boardWidth - 8 * basketSize) / (Board.BasketsPerPlayer + 1) : 0;
+            int columnWidth = basketSize + horizontalGap;
+            int rowGap = boardHeight - 2 * basketSize;
+            int storeVerticalOffset = basketSize + (rowGap - basketSize) / 2;
+
+            player2Store.Location = new Point2D(0, storeVerticalOffset);
+            player2Store.Size = new Size2D(basketSize, basketSize);
+
+            player1Store.Location = new Point2D(basketSize + horizontalGap + Board.BasketsPerPlayer * columnWidth, storeVerticalOffset);
+            player1Store.Size = new Size2D(basketSize, basketSize);
+
+            for (int columnIndex = 0; columnIndex < Board.BasketsPerPlayer; columnIndex++)
+            {
+                int basketX = basketSize + horizontalGap + columnIndex * columnWidth;
+
+                player2Baskets[columnIndex].Location = new Point2D(basketX, 0);
+                player2Baskets[columnIndex].Size = new Size2D(basketSize, basketSize);
+
+                player1Baskets[columnIndex].Location = new Point2D(basketX, basketSize + rowGap);
+                player1Baskets[columnIndex].Size = new Size2D(basketSize, basketSize);
+            }
+        }
 
         private void UpdateControls()
         {

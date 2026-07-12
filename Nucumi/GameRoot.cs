@@ -17,8 +17,8 @@ namespace Nucumi
         {
             graphicsDeviceManager = new GraphicsDeviceManager(this)
             {
-                PreferredBackBufferWidth = 1536,
-                PreferredBackBufferHeight = 1024
+                PreferredBackBufferWidth = 768,
+                PreferredBackBufferHeight = 512
             };
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
@@ -50,7 +50,7 @@ namespace Nucumi
 
         protected override void Draw(GameTime gameTime)
         {
-            spriteBatch.Begin(samplerState: SamplerState.AnisotropicClamp);
+            spriteBatch.Begin(samplerState: SamplerState.LinearClamp);
             ScreenManager.Instance.Draw(spriteBatch);
             spriteBatch.End();
 

@@ -58,14 +58,17 @@ namespace Nucumi.Screens
             int screenWidth = ScreenManager.Instance.Size.Width;
             int screenHeight = ScreenManager.Instance.Size.Height;
 
+            // Proportions derived from the carpet border positions in the reference 1536×1024 image:
+            // inner field left=136, top=130, width=1263, height=763.
+            int boardX = screenWidth * 136 / 1536;
+            int boardY = screenHeight * 130 / 1024;
+            int boardWidth = screenWidth * 1263 / 1536;
+            int boardHeight = screenHeight * 763 / 1024;
+            int labelHeight = screenHeight * 36 / 1024;
+            int statusHeight = screenHeight * 36 / 1024;
+
             backgroundImage.Location = Point2D.Empty;
             backgroundImage.Size = new Size2D(screenWidth, screenHeight);
-            int boardWidth = GuiGameBoard.TotalWidth;
-            int boardHeight = GuiGameBoard.TotalHeight;
-            int boardX = (screenWidth - boardWidth) / 2;
-            int boardY = (screenHeight - boardHeight) / 2;
-            int labelHeight = 36;
-            int statusHeight = 36;
 
             boardControl.Location = new Point2D(boardX, boardY);
             boardControl.Size = new Size2D(boardWidth, boardHeight);
