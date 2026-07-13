@@ -90,6 +90,28 @@ namespace Nucumi.Model
             return oppositeWalnuts + 1;
         }
 
+        public bool IsExtraTurnMove(int basketIndex)
+        {
+            int walnuts = walnutsAtPosition[basketIndex];
+
+            if (walnuts == 0)
+            {
+                return false;
+            }
+
+            bool isPlayer1Basket = basketIndex < BasketsPerPlayer;
+            int[] sequence = isPlayer1Basket ? Player1DistributionSequence : Player2DistributionSequence;
+            int startIndexInSequence = Array.IndexOf(sequence, basketIndex);
+            int landingPosition = sequence[(startIndexInSequence + walnuts) % sequence.Length];
+
+            if (isPlayer1Basket)
+            {
+                return Equals(landingPosition, Player1StoreIndex);
+            }
+
+            return Equals(landingPosition, Player2StoreIndex);
+        }
+
         public bool IsMoveAllowed(int basketIndex)
         {
             if (!Equals(Phase, GamePhase.InProgress))

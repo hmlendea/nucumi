@@ -1,23 +1,24 @@
+using System.Collections.Generic;
+
 using Nucumi.Model;
 
 namespace Nucumi.GameLogic
 {
     internal sealed class BoardAi
     {
-        private static int SearchDepth => 5;
+        private static int SearchDepth => 6;
+
+        // Positional bonus for having an extra-turn move available.
+        // An extra turn is worth roughly 3–4 seeds of positional advantage.
+        private static int ExtraTurnPositionalBonus => 3;
 
         public int ChooseMove(Board board)
         {
             int bestMove = Board.Player2BasketStartIndex;
             int bestScore = int.MinValue;
 
-            for (int basketIndex = Board.Player2BasketStartIndex; basketIndex <= Board.Player2LastBasketIndex; basketIndex++)
+            foreach (int basketIndex in GetOrderedMoves(board, isMaximisingPlayer: true))
             {
-                if (!board.IsMoveAllowed(basketIndex))
-                {
-                    continue;
-                }
-
                 Board simulatedBoard = board.Clone();
                 simulatedBoard.Move(basketIndex);
 
@@ -45,13 +46,8 @@ namespace Nucumi.GameLogic
             {
                 int maximumScore = int.MinValue;
 
-                for (int basketIndex = Board.Player2BasketStartIndex; basketIndex <= Board.Player2LastBasketIndex; basketIndex++)
+                foreach (int basketIndex in GetOrderedMoves(board, isMaximisingPlayer: true))
                 {
-                    if (!board.IsMoveAllowed(basketIndex))
-                    {
-                        continue;
-                    }
-
                     Board simulatedBoard = board.Clone();
                     simulatedBoard.Move(basketIndex);
 
@@ -80,13 +76,8 @@ namespace Nucumi.GameLogic
             {
                 int minimumScore = int.MaxValue;
 
-                for (int basketIndex = 0; basketIndex < Board.BasketsPerPlayer; basketIndex++)
+                foreach (int basketIndex in GetOrderedMoves(board, isMaximisingPlayer: false))
                 {
-                    if (!board.IsMoveAllowed(basketIndex))
-                    {
-                        continue;
-                    }
-
                     Board simulatedBoard = board.Clone();
                     simulatedBoard.Move(basketIndex);
 
@@ -113,18 +104,65 @@ namespace Nucumi.GameLogic
             }
         }
 
+        // Returns moves ordered: extra-turn moves first, then captures, then all others.
+        // Better ordering allows alpha-beta pruning to cut far more branches.
+        private IEnumerable<int> GetOrderedMoves(Board board, bool isMaximisingPlayer)
+        {
+            int startIndex = isMaximisingPlayer ? Board.Player2BasketStartIndex : 0;
+            int endIndex = isMaximisingPlayer ? Board.Player2LastBasketIndex : Board.BasketsPerPlayer - 1;
+
+            List<int> extraTurnMoves = [];
+            List<int> captureMoves = [];
+            List<int> otherMoves = [];
+
+            for (int basketIndex = startIndex; basketIndex <= endIndex; basketIndex++)
+            {
+                if (!board.IsMoveAllowed(basketIndex))
+                {
+                    continue;
+                }
+
+                if (board.IsExtraTurnMove(basketIndex))
+                {
+                    extraTurnMoves.Add(basketIndex);
+                }
+                else if (board.GetImmediateCaptureValue(basketIndex) > 0)
+                {
+                    captureMoves.Add(basketIndex);
+                }
+                else
+                {
+                    otherMoves.Add(basketIndex);
+                }
+            }
+
+            List<int> orderedMoves = [.. extraTurnMoves, .. captureMoves, .. otherMoves];
+
+            return orderedMoves;
+        }
+
         private int Evaluate(Board board)
         {
             int score = board.GetWalnuts(Board.Player2StoreIndex) - board.GetWalnuts(Board.Player1StoreIndex);
 
             for (int basketIndex = Board.Player2BasketStartIndex; basketIndex <= Board.Player2LastBasketIndex; basketIndex++)
             {
-                score += board.GetImmediateCaptureValue(basketIndex) / 2;
+                if (board.IsExtraTurnMove(basketIndex))
+                {
+                    score += ExtraTurnPositionalBonus;
+                }
+
+                score += board.GetImmediateCaptureValue(basketIndex);
             }
 
             for (int basketIndex = 0; basketIndex < Board.BasketsPerPlayer; basketIndex++)
             {
-                score -= board.GetImmediateCaptureValue(basketIndex) / 2;
+                if (board.IsExtraTurnMove(basketIndex))
+                {
+                    score -= ExtraTurnPositionalBonus;
+                }
+
+                score -= board.GetImmediateCaptureValue(basketIndex);
             }
 
             return score;
