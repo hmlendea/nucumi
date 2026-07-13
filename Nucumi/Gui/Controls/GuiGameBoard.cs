@@ -24,6 +24,7 @@ namespace Nucumi.Gui.Controls
         private readonly Board board;
         private readonly GuiBasket[] player1Baskets;
         private readonly GuiBasket[] player2Baskets;
+        private GuiImage backgroundImage;
         private GuiBasket player1Store;
         private GuiBasket player2Store;
 
@@ -36,6 +37,8 @@ namespace Nucumi.Gui.Controls
 
         protected override void DoLoadContent()
         {
+            backgroundImage = new GuiImage { ContentFile = "board/background" };
+
             player2Store = new GuiBasket
             {
                 BoardIndex = Board.Player2StoreIndex,
@@ -53,6 +56,7 @@ namespace Nucumi.Gui.Controls
                 player1Baskets[columnIndex] = new GuiBasket { BoardIndex = columnIndex, LabelPlacement = LabelPlacement.Above };
             }
 
+            RegisterChildren(backgroundImage);
             RegisterChildren(player1Baskets);
             RegisterChildren(player2Baskets);
             RegisterChildren(player1Store, player2Store);
@@ -76,6 +80,9 @@ namespace Nucumi.Gui.Controls
             int boardWidth = Size.Width;
             int boardHeight = Size.Height;
             int basketSize = boardWidth * BasketSizeNumerator / TotalInnerWidthAtReference;
+
+            backgroundImage.Location = Point2D.Empty;
+            backgroundImage.Size = Size;
 
             // Label area is 1/3 of the basket sprite size; total control extent = 4/3 * basketSize.
             int labelExtent = basketSize / 3;

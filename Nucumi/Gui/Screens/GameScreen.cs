@@ -15,8 +15,11 @@ namespace Nucumi.Gui.Screens
     internal sealed class GameScreen : Screen
     {
         private readonly Board board;
-        private GuiImage backgroundImage;
-        private GuiGameBoard boardControl;
+        private GuiButton undoButton;
+        private GuiButton restartButton;
+        private GuiButton infoButton;
+        private GuiButton settingsButton;
+        private GuiGameBoard gameBoard;
         private GuiText player1Label;
         private GuiText player2Label;
         private GuiText statusText;
@@ -29,13 +32,16 @@ namespace Nucumi.Gui.Screens
 
         protected override void DoLoadContent()
         {
-            backgroundImage = new GuiImage { ContentFile = "board/background" };
-            boardControl = new GuiGameBoard(board);
+            undoButton = new GuiButton { ButtonType = ButtonType.Undo };
+            restartButton = new GuiButton { ButtonType = ButtonType.Restart };
+            infoButton = new GuiButton { ButtonType = ButtonType.Info };
+            settingsButton = new GuiButton { ButtonType = ButtonType.Settings };
+            gameBoard = new GuiGameBoard(board);
             player1Label = new GuiText { FontName = "DefaultFont" };
             player2Label = new GuiText { FontName = "DefaultFont" };
             statusText = new GuiText { FontName = "DefaultFont" };
 
-            GuiManager.Instance.RegisterControls(backgroundImage, boardControl, player1Label, player2Label, statusText);
+            GuiManager.Instance.RegisterControls(undoButton, restartButton, infoButton, settingsButton, gameBoard, player1Label, player2Label, statusText);
             RegisterEvents();
             SetChildrenProperties();
         }
@@ -46,29 +52,51 @@ namespace Nucumi.Gui.Screens
 
         protected override void DoDraw(SpriteBatch spriteBatch) { }
 
-        private void RegisterEvents() => InputManager.Instance.KeyboardKeyPressed += OnKeyboardKeyPressed;
+        private void RegisterEvents()
+        {
+            InputManager.Instance.KeyboardKeyPressed += OnKeyboardKeyPressed;
+            restartButton.Clicked += OnRestartButtonClicked;
+        }
 
-        private void UnregisterEvents() => InputManager.Instance.KeyboardKeyPressed -= OnKeyboardKeyPressed;
+        private void UnregisterEvents()
+        {
+            InputManager.Instance.KeyboardKeyPressed -= OnKeyboardKeyPressed;
+            restartButton.Clicked -= OnRestartButtonClicked;
+        }
 
         private void SetChildrenProperties()
         {
             int screenWidth = ScreenManager.Instance.Size.Width;
             int screenHeight = ScreenManager.Instance.Size.Height;
 
+            // Fixed 64×64 button row at the top.
+            int buttonSize = 64;
+
             // Proportions derived from the carpet border positions in the reference 1536×1024 image:
-            // inner field left=136, top=130, width=1263, height=763.
+            // inner field left=136, width=1263, height=763.
             int boardX = screenWidth * 136 / 1536;
-            int boardY = screenHeight * 130 / 1024;
+            int boardY = buttonSize; // board sits directly below the button row, no gap
             int boardWidth = screenWidth * 1263 / 1536;
             int boardHeight = screenHeight * 763 / 1024;
             int labelHeight = screenHeight * 36 / 1024;
             int statusHeight = screenHeight * 36 / 1024;
 
-            backgroundImage.Location = Point2D.Empty;
-            backgroundImage.Size = new Size2D(screenWidth, screenHeight);
+            undoButton.Location = new Point2D(0, 0);
+            undoButton.Size = new Size2D(buttonSize, buttonSize);
 
-            boardControl.Location = new Point2D(boardX, boardY);
-            boardControl.Size = new Size2D(boardWidth, boardHeight);
+            restartButton.Location = new Point2D(buttonSize, 0);
+            restartButton.Size = new Size2D(buttonSize, buttonSize);
+
+            infoButton.Location = new Point2D(screenWidth - 2 * buttonSize, 0);
+            infoButton.Size = new Size2D(buttonSize, buttonSize);
+
+            settingsButton.Location = new Point2D(screenWidth - buttonSize, 0);
+            settingsButton.Size = new Size2D(buttonSize, buttonSize);
+
+            gameBoard.Location = new Point2D(0, buttonSize);
+            gameBoard.Size = new Size2D(
+                ScreenManager.Instance.Size.Width,
+                ScreenManager.Instance.Size.Height - buttonSize);
 
             player2Label.Location = new Point2D(boardX, boardY - labelHeight - 8);
             player2Label.Size = new Size2D(boardWidth, labelHeight);
@@ -121,6 +149,9 @@ namespace Nucumi.Gui.Screens
 
             return $"Game over — Draw! ({player1Score} each)  |  Press R to restart";
         }
+
+        private void OnRestartButtonClicked(object sender, MouseButtonEventArgs e)
+            => board.Reset();
 
         private void OnKeyboardKeyPressed(object sender, KeyboardKeyEventArgs keyEventArgs)
         {
