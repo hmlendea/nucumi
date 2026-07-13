@@ -114,6 +114,20 @@ namespace Nucumi.GameLogic
         }
 
         private int Evaluate(Board board)
-            => board.GetWalnuts(Board.Player2StoreIndex) - board.GetWalnuts(Board.Player1StoreIndex);
+        {
+            int score = board.GetWalnuts(Board.Player2StoreIndex) - board.GetWalnuts(Board.Player1StoreIndex);
+
+            for (int basketIndex = Board.Player2BasketStartIndex; basketIndex <= Board.Player2LastBasketIndex; basketIndex++)
+            {
+                score += board.GetImmediateCaptureValue(basketIndex) / 2;
+            }
+
+            for (int basketIndex = 0; basketIndex < Board.BasketsPerPlayer; basketIndex++)
+            {
+                score -= board.GetImmediateCaptureValue(basketIndex) / 2;
+            }
+
+            return score;
+        }
     }
 }

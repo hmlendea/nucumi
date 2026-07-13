@@ -47,6 +47,49 @@ namespace Nucumi.Model
 
         public int GetWalnuts(int positionIndex) => walnutsAtPosition[positionIndex];
 
+        public int GetImmediateCaptureValue(int basketIndex)
+        {
+            int walnuts = walnutsAtPosition[basketIndex];
+
+            if (walnuts == 0)
+            {
+                return 0;
+            }
+
+            bool isPlayer1Basket = basketIndex < BasketsPerPlayer;
+            int[] sequence = isPlayer1Basket ? Player1DistributionSequence : Player2DistributionSequence;
+            int startIndexInSequence = Array.IndexOf(sequence, basketIndex);
+            int landingPosition = sequence[(startIndexInSequence + walnuts) % sequence.Length];
+
+            bool isOwnEmptyBasket;
+
+            if (isPlayer1Basket)
+            {
+                isOwnEmptyBasket = landingPosition < BasketsPerPlayer && walnutsAtPosition[landingPosition] == 0;
+            }
+            else
+            {
+                isOwnEmptyBasket = landingPosition >= Player2BasketStartIndex
+                    && landingPosition <= Player2LastBasketIndex
+                    && walnutsAtPosition[landingPosition] == 0;
+            }
+
+            if (!isOwnEmptyBasket)
+            {
+                return 0;
+            }
+
+            int oppositePosition = Player2LastBasketIndex - landingPosition;
+            int oppositeWalnuts = walnutsAtPosition[oppositePosition];
+
+            if (oppositeWalnuts == 0)
+            {
+                return 0;
+            }
+
+            return oppositeWalnuts + 1;
+        }
+
         public bool IsMoveAllowed(int basketIndex)
         {
             if (!Equals(Phase, GamePhase.InProgress))
