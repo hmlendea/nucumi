@@ -36,6 +36,15 @@ namespace Nucumi.Model
             Reset();
         }
 
+        private Board(int[] existingWalnutsAtPosition, GamePhase phase, Player currentPlayer)
+        {
+            walnutsAtPosition = (int[])existingWalnutsAtPosition.Clone();
+            Phase = phase;
+            CurrentPlayer = currentPlayer;
+        }
+
+        public Board Clone() => new(walnutsAtPosition, Phase, CurrentPlayer);
+
         public int GetWalnuts(int positionIndex) => walnutsAtPosition[positionIndex];
 
         public bool IsMoveAllowed(int basketIndex)
@@ -129,7 +138,7 @@ namespace Nucumi.Model
 
             if (hasLandedInOwnEmptyBasket)
             {
-int oppositePosition = Player2LastBasketIndex - lastLandedPosition;
+                int oppositePosition = Player2LastBasketIndex - lastLandedPosition;
 
                 if (walnutsAtPosition[oppositePosition] > 0)
                 {
