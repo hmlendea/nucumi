@@ -14,6 +14,10 @@ namespace Nucumi.Model
 
         public static int InitialWalnutsPerBasket => 4;
 
+        public static int Player2BasketStartIndex => Player1StoreIndex + 1;
+
+        public static int Player2LastBasketIndex => Player2StoreIndex - 1;
+
         // Counter-clockwise distribution path for Player 1 (skips Player 2's store at 13).
         private static readonly int[] Player1DistributionSequence = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
@@ -43,10 +47,10 @@ namespace Nucumi.Model
 
             if (Equals(CurrentPlayer, Player.Player1))
             {
-                return basketIndex >= 0 && basketIndex <= 5 && walnutsAtPosition[basketIndex] > 0;
+                return basketIndex >= 0 && basketIndex < BasketsPerPlayer && walnutsAtPosition[basketIndex] > 0;
             }
 
-            return basketIndex >= 7 && basketIndex <= 12 && walnutsAtPosition[basketIndex] > 0;
+            return basketIndex >= Player2BasketStartIndex && basketIndex <= Player2LastBasketIndex && walnutsAtPosition[basketIndex] > 0;
         }
 
         public void Reset()
@@ -59,7 +63,7 @@ namespace Nucumi.Model
             for (int basketIndex = 0; basketIndex < BasketsPerPlayer; basketIndex++)
             {
                 walnutsAtPosition[basketIndex] = InitialWalnutsPerBasket;
-                walnutsAtPosition[7 + basketIndex] = InitialWalnutsPerBasket;
+                walnutsAtPosition[Player2BasketStartIndex + basketIndex] = InitialWalnutsPerBasket;
             }
 
             Phase = GamePhase.InProgress;
@@ -113,19 +117,19 @@ namespace Nucumi.Model
             }
 
             bool hasLandedInOwnEmptyBasket = lastLandedPosition >= 0
-                && lastLandedPosition <= 5
+                && lastLandedPosition < BasketsPerPlayer
                 && Equals(walnutsAtPosition[lastLandedPosition], 1);
 
             if (Equals(CurrentPlayer, Player.Player2))
             {
-                hasLandedInOwnEmptyBasket = lastLandedPosition >= 7
-                    && lastLandedPosition <= 12
+                hasLandedInOwnEmptyBasket = lastLandedPosition >= Player2BasketStartIndex
+                    && lastLandedPosition <= Player2LastBasketIndex
                     && Equals(walnutsAtPosition[lastLandedPosition], 1);
             }
 
             if (hasLandedInOwnEmptyBasket)
             {
-                int oppositePosition = 12 - lastLandedPosition;
+int oppositePosition = Player2LastBasketIndex - lastLandedPosition;
 
                 if (walnutsAtPosition[oppositePosition] > 0)
                 {
@@ -171,7 +175,7 @@ namespace Nucumi.Model
                     isPlayer1SideEmpty = false;
                 }
 
-                if (walnutsAtPosition[7 + basketIndex] > 0)
+                if (walnutsAtPosition[Player2BasketStartIndex + basketIndex] > 0)
                 {
                     isPlayer2SideEmpty = false;
                 }
@@ -186,8 +190,8 @@ namespace Nucumi.Model
             {
                 walnutsAtPosition[Player1StoreIndex] += walnutsAtPosition[basketIndex];
                 walnutsAtPosition[basketIndex] = 0;
-                walnutsAtPosition[Player2StoreIndex] += walnutsAtPosition[7 + basketIndex];
-                walnutsAtPosition[7 + basketIndex] = 0;
+                walnutsAtPosition[Player2StoreIndex] += walnutsAtPosition[Player2BasketStartIndex + basketIndex];
+                walnutsAtPosition[Player2BasketStartIndex + basketIndex] = 0;
             }
 
             Phase = GamePhase.GameOver;

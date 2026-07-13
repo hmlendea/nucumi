@@ -1,5 +1,3 @@
-using Nucumi;
-
 namespace Nucumi
 {
     internal static class Program

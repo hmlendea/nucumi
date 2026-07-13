@@ -1,12 +1,14 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+
 using NuciXNA.Graphics.Drawing;
 using NuciXNA.Gui;
 using NuciXNA.Gui.Controls;
 using NuciXNA.Gui.Screens;
 using NuciXNA.Input;
 using NuciXNA.Primitives;
+
 using Nucumi.Gui.Controls;
 using Nucumi.Model;
 
@@ -14,6 +16,19 @@ namespace Nucumi.Gui.Screens
 {
     internal sealed class GameScreen : Screen
     {
+        // Pixel measurements within the board/background.png reference texture (1536×1024).
+        private static int ReferenceBackgroundWidth => 1536;
+        private static int ReferenceBackgroundHeight => 1024;
+        private static int BackgroundInnerFieldLeft => 136;
+        private static int BackgroundInnerFieldWidth => 1263;
+        private static int BackgroundInnerFieldHeight => 763;
+        private static int BackgroundLabelBarHeight => 36;
+
+        // Layout constants.
+        private static int ButtonBarHeight => 64;
+        private static int LabelBoardGap => 8;
+        private static int StatusBarBottomMargin => 10;
+
         private readonly Board board;
         private GuiButton undoButton;
         private GuiButton restartButton;
@@ -69,50 +84,48 @@ namespace Nucumi.Gui.Screens
             int screenWidth = ScreenManager.Instance.Size.Width;
             int screenHeight = ScreenManager.Instance.Size.Height;
 
-            // Fixed 64×64 button row at the top.
-            int buttonSize = 64;
-
-            // Proportions derived from the carpet border positions in the reference 1536×1024 image:
-            // inner field left=136, width=1263, height=763.
-            int boardX = screenWidth * 136 / 1536;
-            int boardY = buttonSize; // board sits directly below the button row, no gap
-            int boardWidth = screenWidth * 1263 / 1536;
-            int boardHeight = screenHeight * 763 / 1024;
-            int labelHeight = screenHeight * 36 / 1024;
-            int statusHeight = screenHeight * 36 / 1024;
+            // Layout proportions from the carpet border positions in the reference image.
+            int boardX = screenWidth * BackgroundInnerFieldLeft / ReferenceBackgroundWidth;
+            int boardY = ButtonBarHeight;
+            int boardWidth = screenWidth * BackgroundInnerFieldWidth / ReferenceBackgroundWidth;
+            int boardHeight = screenHeight * BackgroundInnerFieldHeight / ReferenceBackgroundHeight;
+            int labelHeight = screenHeight * BackgroundLabelBarHeight / ReferenceBackgroundHeight;
+            int statusHeight = screenHeight * BackgroundLabelBarHeight / ReferenceBackgroundHeight;
+            int settingsButtonX = screenWidth - ButtonBarHeight;
+            int infoButtonX = settingsButtonX - ButtonBarHeight;
 
             undoButton.Location = new Point2D(0, 0);
-            undoButton.Size = new Size2D(buttonSize, buttonSize);
+            undoButton.Size = new Size2D(ButtonBarHeight, ButtonBarHeight);
 
-            restartButton.Location = new Point2D(buttonSize, 0);
-            restartButton.Size = new Size2D(buttonSize, buttonSize);
+            restartButton.Location = new Point2D(ButtonBarHeight, 0);
+            restartButton.Size = new Size2D(ButtonBarHeight, ButtonBarHeight);
 
-            infoButton.Location = new Point2D(screenWidth - 2 * buttonSize, 0);
-            infoButton.Size = new Size2D(buttonSize, buttonSize);
+            infoButton.Location = new Point2D(infoButtonX, 0);
+            infoButton.Size = new Size2D(ButtonBarHeight, ButtonBarHeight);
 
-            settingsButton.Location = new Point2D(screenWidth - buttonSize, 0);
-            settingsButton.Size = new Size2D(buttonSize, buttonSize);
+            settingsButton.Location = new Point2D(settingsButtonX, 0);
+            settingsButton.Size = new Size2D(ButtonBarHeight, ButtonBarHeight);
 
-            gameBoard.Location = new Point2D(0, buttonSize);
+            gameBoard.Location = new Point2D(0, ButtonBarHeight);
             gameBoard.Size = new Size2D(
                 ScreenManager.Instance.Size.Width,
-                ScreenManager.Instance.Size.Height - buttonSize);
+                ScreenManager.Instance.Size.Height - ButtonBarHeight);
 
-            player2Label.Location = new Point2D(boardX, boardY - labelHeight - 8);
+            player2Label.Location = new Point2D(boardX, boardY - labelHeight - LabelBoardGap);
             player2Label.Size = new Size2D(boardWidth, labelHeight);
             player2Label.HorizontalAlignment = Alignment.Middle;
             player2Label.VerticalAlignment = Alignment.Middle;
             player2Label.ForegroundColour = Colour.Black;
             player2Label.Text = "Player 2";
 
-            player1Label.Location = new Point2D(boardX, boardY + boardHeight + 8);
+            player1Label.Location = new Point2D(boardX, boardY + boardHeight + LabelBoardGap);
             player1Label.Size = new Size2D(boardWidth, labelHeight);
             player1Label.HorizontalAlignment = Alignment.Middle;
             player1Label.VerticalAlignment = Alignment.Middle;
             player1Label.ForegroundColour = Colour.Black;
             player1Label.Text = "Player 1";
 
-            statusText.Location = new Point2D(0, screenHeight - statusHeight - 10);
+            statusText.Location = new Point2D(0, screenHeight - statusHeight - StatusBarBottomMargin);
             statusText.Size = new Size2D(screenWidth, statusHeight);
             statusText.HorizontalAlignment = Alignment.Middle;
             statusText.VerticalAlignment = Alignment.Middle;
@@ -150,7 +163,7 @@ namespace Nucumi.Gui.Screens
             return $"Game over — Draw! ({player1Score} each)  |  Press R to restart";
         }
 
-        private void OnRestartButtonClicked(object sender, MouseButtonEventArgs e)
+        private void OnRestartButtonClicked(object sender, MouseButtonEventArgs mouseButtonEventArgs)
             => board.Reset();
 
         private void OnKeyboardKeyPressed(object sender, KeyboardKeyEventArgs keyEventArgs)

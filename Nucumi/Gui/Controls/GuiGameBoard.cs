@@ -1,9 +1,10 @@
-using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+
 using NuciXNA.Gui.Controls;
 using NuciXNA.Input;
 using NuciXNA.Primitives;
+
 using Nucumi.Model;
 
 namespace Nucumi.Gui.Controls
@@ -46,7 +47,7 @@ namespace Nucumi.Gui.Controls
             {
                 player2Baskets[columnIndex] = new GuiBasket
                 {
-                    BoardIndex = 12 - columnIndex,
+                    BoardIndex = Board.Player2LastBasketIndex - columnIndex,
                     LabelPlacement = LabelPlacement.Below
                 };
 

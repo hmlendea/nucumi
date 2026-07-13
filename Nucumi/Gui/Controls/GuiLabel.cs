@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+
 using NuciXNA.Graphics.Drawing;
 using NuciXNA.Gui.Controls;
 using NuciXNA.Primitives;
@@ -16,7 +17,17 @@ namespace Nucumi.Gui.Controls
 
         public string Text
         {
-            get => labelText?.Text ?? string.Empty;
+            get
+            {
+                string text = string.Empty;
+
+                if (labelText is not null)
+                {
+                    text = labelText.Text;
+                }
+
+                return text;
+            }
             set => labelText?.Text = value;
         }
 

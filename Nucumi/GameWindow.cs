@@ -1,9 +1,11 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+
 using NuciXNA.DataAccess.Content;
 using NuciXNA.Graphics;
 using NuciXNA.Gui.Screens;
 using NuciXNA.Input;
+
 using Nucumi.Gui.Screens;
 
 namespace Nucumi

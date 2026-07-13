@@ -1,6 +1,8 @@
 using System;
+
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+
 using NuciXNA.Gui.Controls;
 using NuciXNA.Primitives;
 
@@ -74,13 +76,11 @@ namespace Nucumi.Gui.Controls
             basketImage.Size = spriteSize;
             basketImage.SourceRectangle = new Rectangle2D(frameIndex * SpriteFrameSize, 0, SpriteFrameSize, SpriteFrameSize);
 
+            basketImage.TintColour = Colour.White;
+
             if (IsSelectable && IsHovered)
             {
                 basketImage.TintColour = new Colour(255, 220, 80);
-            }
-            else
-            {
-                basketImage.TintColour = Colour.White;
             }
 
             walnutCountLabel.Location = labelLocation;
