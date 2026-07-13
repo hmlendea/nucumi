@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 using NuciXNA.Gui.Controls;
+using NuciXNA.Input;
 using NuciXNA.Primitives;
 
 namespace Nucumi.Gui.Controls
@@ -10,7 +11,11 @@ namespace Nucumi.Gui.Controls
     {
         private static int SpriteFrameSize => 128;
 
+        private static Colour HoverTintColour => new Colour(255, 220, 80);
+        private static Colour PressedTintColour => new Colour(255, 140, 30);
+
         private GuiImage buttonImage;
+        private bool isLeftMouseButtonHeld;
 
         public ButtonType ButtonType { get; set; }
 
@@ -23,9 +28,16 @@ namespace Nucumi.Gui.Controls
 
             RegisterChildren(buttonImage);
             SetChildrenProperties();
+
+            InputManager.Instance.MouseButtonPressed += OnMouseButtonPressed;
+            InputManager.Instance.MouseButtonReleased += OnMouseButtonReleased;
         }
 
-        protected override void DoUnloadContent() { }
+        protected override void DoUnloadContent()
+        {
+            InputManager.Instance.MouseButtonPressed -= OnMouseButtonPressed;
+            InputManager.Instance.MouseButtonReleased -= OnMouseButtonReleased;
+        }
 
         protected override void DoUpdate(GameTime gameTime) => SetChildrenProperties();
 
@@ -40,7 +52,28 @@ namespace Nucumi.Gui.Controls
 
             if (IsHovered)
             {
-                buttonImage.TintColour = new Colour(255, 220, 80);
+                buttonImage.TintColour = HoverTintColour;
+            }
+
+            if (IsHovered && isLeftMouseButtonHeld)
+            {
+                buttonImage.TintColour = PressedTintColour;
+            }
+        }
+
+        private void OnMouseButtonPressed(object sender, MouseButtonEventArgs mouseButtonEventArgs)
+        {
+            if (Equals(mouseButtonEventArgs.Button, MouseButton.Left))
+            {
+                isLeftMouseButtonHeld = true;
+            }
+        }
+
+        private void OnMouseButtonReleased(object sender, MouseButtonEventArgs mouseButtonEventArgs)
+        {
+            if (Equals(mouseButtonEventArgs.Button, MouseButton.Left))
+            {
+                isLeftMouseButtonHeld = false;
             }
         }
     }

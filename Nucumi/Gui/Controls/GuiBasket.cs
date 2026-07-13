@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 using NuciXNA.Gui.Controls;
+using NuciXNA.Input;
 using NuciXNA.Primitives;
 
 namespace Nucumi.Gui.Controls
@@ -13,8 +14,15 @@ namespace Nucumi.Gui.Controls
         private static int SpriteFrameSize => 240;
         private static int MaxFrameIndex => 14;
 
+        private static Colour HoverTintColour => new(255, 220, 80);
+        private static Colour PressedTintColour => new(255, 140, 30);
+
         private GuiImage basketImage;
         private GuiLabel walnutCountLabel;
+        private bool isLeftMouseButtonHeld;
+        private bool isMouseButtonPressedOverThis;
+
+        public event MouseButtonEventHandler Released;
 
         public int BoardIndex { get; set; }
 
@@ -35,9 +43,16 @@ namespace Nucumi.Gui.Controls
 
             RegisterChildren(basketImage, walnutCountLabel);
             SetChildrenProperties();
+
+            InputManager.Instance.MouseButtonPressed += OnMouseButtonPressed;
+            InputManager.Instance.MouseButtonReleased += OnMouseButtonReleased;
         }
 
-        protected override void DoUnloadContent() { }
+        protected override void DoUnloadContent()
+        {
+            InputManager.Instance.MouseButtonPressed -= OnMouseButtonPressed;
+            InputManager.Instance.MouseButtonReleased -= OnMouseButtonReleased;
+        }
 
         protected override void DoUpdate(GameTime gameTime) => SetChildrenProperties();
 
@@ -80,13 +95,46 @@ namespace Nucumi.Gui.Controls
 
             if (IsSelectable && IsHovered)
             {
-                basketImage.TintColour = new Colour(255, 220, 80);
+                basketImage.TintColour = HoverTintColour;
+            }
+
+            if (IsSelectable && IsHovered && isLeftMouseButtonHeld)
+            {
+                basketImage.TintColour = PressedTintColour;
             }
 
             walnutCountLabel.Location = labelLocation;
             walnutCountLabel.Size = labelSize;
             walnutCountLabel.BackgroundWidth = labelSize.Width;
             walnutCountLabel.Text = WalnutCount.ToString();
+        }
+
+        private void OnMouseButtonPressed(object sender, MouseButtonEventArgs mouseButtonEventArgs)
+        {
+            if (!Equals(mouseButtonEventArgs.Button, MouseButton.Left))
+            {
+                return;
+            }
+
+            isLeftMouseButtonHeld = true;
+            isMouseButtonPressedOverThis = DisplayRectangle.Contains(mouseButtonEventArgs.Location);
+        }
+
+        private void OnMouseButtonReleased(object sender, MouseButtonEventArgs mouseButtonEventArgs)
+        {
+            if (!Equals(mouseButtonEventArgs.Button, MouseButton.Left))
+            {
+                return;
+            }
+
+            isLeftMouseButtonHeld = false;
+
+            if (isMouseButtonPressedOverThis && DisplayRectangle.Contains(mouseButtonEventArgs.Location))
+            {
+                Released?.Invoke(this, mouseButtonEventArgs);
+            }
+
+            isMouseButtonPressedOverThis = false;
         }
     }
 }
