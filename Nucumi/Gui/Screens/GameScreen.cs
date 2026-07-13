@@ -2,9 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-using NuciXNA.Graphics.Drawing;
 using NuciXNA.Gui;
-using NuciXNA.Gui.Controls;
 using NuciXNA.Gui.Screens;
 using NuciXNA.Input;
 using NuciXNA.Primitives;
@@ -24,7 +22,7 @@ namespace Nucumi.Gui.Screens
         private GuiButton infoButton;
         private GuiButton settingsButton;
         private GuiGameBoard gameBoard;
-        private GuiText statusText;
+        private GuiStatusBar statusBar;
 
         public GameScreen()
         {
@@ -39,9 +37,10 @@ namespace Nucumi.Gui.Screens
             infoButton = new GuiButton { ButtonType = ButtonType.Info };
             settingsButton = new GuiButton { ButtonType = ButtonType.Settings };
             gameBoard = new GuiGameBoard(board);
-            statusText = new GuiText { FontName = "DefaultFont" };
+            statusBar = new GuiStatusBar();
 
-            GuiManager.Instance.RegisterControls(undoButton, restartButton, infoButton, settingsButton, gameBoard, statusText);
+            GuiManager.Instance.RegisterControls(gameBoard);
+            GuiManager.Instance.RegisterControls(undoButton, restartButton, infoButton, settingsButton, statusBar);
             RegisterEvents();
             SetChildrenProperties();
         }
@@ -82,17 +81,14 @@ namespace Nucumi.Gui.Screens
             settingsButton.Location = new Point2D(settingsButtonX, 0);
             settingsButton.Size = new Size2D(ButtonBarHeight, ButtonBarHeight);
 
+            statusBar.Location = new Point2D(2 * ButtonBarHeight, 0);
+            statusBar.Size = new Size2D(infoButtonX - 2 * ButtonBarHeight, ButtonBarHeight);
+            statusBar.Text = BuildStatusText();
+
             gameBoard.Location = new Point2D(0, ButtonBarHeight);
             gameBoard.Size = new Size2D(
                 ScreenManager.Instance.Size.Width,
                 ScreenManager.Instance.Size.Height - ButtonBarHeight);
-
-            statusText.Location = new Point2D(2 * ButtonBarHeight, 0);
-            statusText.Size = new Size2D(infoButtonX - 2 * ButtonBarHeight, ButtonBarHeight);
-            statusText.HorizontalAlignment = Alignment.Middle;
-            statusText.VerticalAlignment = Alignment.Middle;
-            statusText.ForegroundColour = Colour.White;
-            statusText.Text = BuildStatusText();
         }
 
         private string BuildStatusText()
