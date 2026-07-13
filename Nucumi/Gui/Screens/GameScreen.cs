@@ -18,11 +18,11 @@ namespace Nucumi.Gui.Screens
     internal sealed class GameScreen : Screen
     {
         private static int ButtonBarHeight => 64;
-        private static double AiMoveDelayMilliseconds => 600;
+        private static double AiMoveDelayMilliseconds => 1000;
 
         private readonly Board board;
         private readonly BoardAi boardAi;
-        private double aiMoveElapsedMilliseconds;
+        private TimeSpan aiMoveScheduledAt;
         private GuiButton undoButton;
         private GuiButton restartButton;
         private GuiButton infoButton;
@@ -60,17 +60,25 @@ namespace Nucumi.Gui.Screens
 
             if (Equals(board.Phase, GamePhase.InProgress) && Equals(board.CurrentPlayer, Player.Player2))
             {
-                aiMoveElapsedMilliseconds += gameTime.ElapsedGameTime.TotalMilliseconds;
-
-                if (aiMoveElapsedMilliseconds >= AiMoveDelayMilliseconds)
+                if (aiMoveScheduledAt == TimeSpan.Zero)
                 {
-                    board.Move(boardAi.ChooseMove(board));
-                    aiMoveElapsedMilliseconds = 0;
+                    aiMoveScheduledAt = gameTime.TotalGameTime + TimeSpan.FromMilliseconds(AiMoveDelayMilliseconds);
+                }
+                else if (gameTime.TotalGameTime >= aiMoveScheduledAt)
+                {
+                    int aiMove = boardAi.ChooseMove(board);
+
+                    if (board.IsMoveAllowed(aiMove))
+                    {
+                        board.Move(aiMove);
+                    }
+
+                    aiMoveScheduledAt = TimeSpan.Zero;
                 }
             }
             else
             {
-                aiMoveElapsedMilliseconds = 0;
+                aiMoveScheduledAt = TimeSpan.Zero;
             }
         }
 
@@ -149,7 +157,7 @@ namespace Nucumi.Gui.Screens
         private void OnRestartButtonClicked(object sender, MouseButtonEventArgs mouseButtonEventArgs)
         {
             board.Reset();
-            aiMoveElapsedMilliseconds = 0;
+            aiMoveScheduledAt = TimeSpan.Zero;
         }
 
         private void OnKeyboardKeyPressed(object sender, KeyboardKeyEventArgs keyEventArgs)
