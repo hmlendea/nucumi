@@ -20,6 +20,61 @@
 /processorParam:TextureFormat=Compressed
 /build:Fonts/DefaultFont.spritefont
 
+#begin board/background.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyEnabled=False
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:RotateFlipType=None
+/processorParam:TextureFormat=Color
+/build:board/background.png
+
+#begin board/basket.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyEnabled=False
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:RotateFlipType=None
+/processorParam:TextureFormat=Color
+/build:board/basket.png
+
+#begin board/buttons.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyEnabled=False
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:RotateFlipType=None
+/processorParam:TextureFormat=Color
+/build:board/buttons.png
+
+#begin board/label.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyEnabled=False
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:RotateFlipType=None
+/processorParam:TextureFormat=Color
+/build:board/label.png
+
+#begin board/status_bar.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyEnabled=False
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:RotateFlipType=None
+/processorParam:TextureFormat=Color
+/build:board/status_bar.png
+
 #begin ScreenManager/FillImage.png
 /importer:TextureImporter
 /processor:TextureProcessor

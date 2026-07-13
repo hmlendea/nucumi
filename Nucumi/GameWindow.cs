@@ -1,33 +1,32 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+
 using NuciXNA.DataAccess.Content;
 using NuciXNA.Graphics;
 using NuciXNA.Gui.Screens;
 using NuciXNA.Input;
-using Nucumi.Screens;
+
+using Nucumi.Gui.Screens;
 
 namespace Nucumi
 {
-    internal sealed class GameRoot : Game
+    internal sealed class GameWindow : Game
     {
         private readonly GraphicsDeviceManager graphicsDeviceManager;
         private SpriteBatch spriteBatch;
 
-        public GameRoot()
+        public GameWindow()
         {
             graphicsDeviceManager = new GraphicsDeviceManager(this)
             {
                 PreferredBackBufferWidth = 1280,
-                PreferredBackBufferHeight = 720
+                PreferredBackBufferHeight = 853
             };
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
         }
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-        }
+        protected override void Initialize() => base.Initialize();
 
         protected override void LoadContent()
         {
@@ -50,7 +49,7 @@ namespace Nucumi
 
         protected override void Draw(GameTime gameTime)
         {
-            spriteBatch.Begin(samplerState: SamplerState.AnisotropicClamp);
+            spriteBatch.Begin(samplerState: SamplerState.LinearClamp);
             ScreenManager.Instance.Draw(spriteBatch);
             spriteBatch.End();
 

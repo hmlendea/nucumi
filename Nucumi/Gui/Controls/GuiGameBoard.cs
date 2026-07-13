@@ -1,9 +1,10 @@
-using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+
 using NuciXNA.Gui.Controls;
 using NuciXNA.Input;
 using NuciXNA.Primitives;
+
 using Nucumi.Model;
 
 namespace Nucumi.Gui.Controls
@@ -14,94 +15,136 @@ namespace Nucumi.Gui.Controls
     //              [P1b0] [P1b1] [P1b2] [P1b3] [P1b4] [P1b5]
     //
     // P2 basket in column c has board index 12 − c (so P2b5 = index 12 is leftmost).
-    internal sealed class GuiGameBoard : GuiControl
+    internal sealed class GuiGameBoard(Board board) : GuiControl
     {
-        private static int BasketSize => 110;
-        private static int StoreWidth => 110;
-        private static int StoreHeight => 240;
-        private static int GapSize => 20;
-        private static int ColumnWidth => BasketSize + GapSize;
+        // Pixel measurements within the board/background.png texture.
+        private static int BackgroundBasketWidth => 143;
+        private static int BackgroundInnerBorderLeft => 136;
+        private static int BackgroundInnerBorderTop => 130;
 
-        public static int TotalWidth => 2 * StoreWidth + GapSize + Board.BasketsPerPlayer * ColumnWidth;
-        public static int TotalHeight => 2 * BasketSize + GapSize;
-
-        private readonly Board board;
-        private readonly GuiBasket[] player1Baskets;
-        private readonly GuiBasket[] player2Baskets;
-        private GuiStore player1Store;
-        private GuiStore player2Store;
-
-        public GuiGameBoard(Board board)
-        {
-            this.board = board;
-            player1Baskets = new GuiBasket[Board.BasketsPerPlayer];
-            player2Baskets = new GuiBasket[Board.BasketsPerPlayer];
-        }
+        private readonly GuiBasket[] player1Baskets = new GuiBasket[Board.BasketsPerPlayer];
+        private readonly GuiBasket[] player2Baskets = new GuiBasket[Board.BasketsPerPlayer];
+        private GuiImage backgroundImage;
+        private GuiBasket player1Store;
+        private GuiBasket player2Store;
 
         protected override void DoLoadContent()
         {
-            List<IGuiControl> children = [];
+            backgroundImage = new GuiImage { ContentFile = "board/background" };
 
-            player2Store = new GuiStore
+            player2Store = new GuiBasket
             {
-                Location = Point2D.Empty,
-                Size = new Size2D(StoreWidth, StoreHeight)
+                BoardIndex = Board.Player2StoreIndex,
+                LabelPlacement = LabelPlacement.Above
             };
-
-            player1Store = new GuiStore
+            player1Store = new GuiBasket
             {
-                Location = new Point2D(StoreWidth + GapSize + Board.BasketsPerPlayer * ColumnWidth, 0),
-                Size = new Size2D(StoreWidth, StoreHeight)
+                BoardIndex = Board.Player1StoreIndex,
+                LabelPlacement = LabelPlacement.Below
             };
 
             for (int columnIndex = 0; columnIndex < Board.BasketsPerPlayer; columnIndex++)
             {
-                int basketX = StoreWidth + GapSize + columnIndex * ColumnWidth;
-
                 player2Baskets[columnIndex] = new GuiBasket
                 {
-                    BoardIndex = 12 - columnIndex,
-                    Location = new Point2D(basketX, 0),
-                    Size = new Size2D(BasketSize, BasketSize)
+                    BoardIndex = Board.Player2LastBasketIndex - columnIndex,
+                    LabelPlacement = LabelPlacement.Below
                 };
 
                 player1Baskets[columnIndex] = new GuiBasket
                 {
                     BoardIndex = columnIndex,
-                    Location = new Point2D(basketX, BasketSize + GapSize),
-                    Size = new Size2D(BasketSize, BasketSize)
+                    LabelPlacement = LabelPlacement.Above
                 };
             }
 
-            children.Add(player2Store);
+            RegisterChildren(backgroundImage);
+            RegisterChildren(player1Baskets);
+            RegisterChildren(player2Baskets);
+            RegisterChildren(player1Store, player2Store);
 
-            for (int basketIndex = 0; basketIndex < Board.BasketsPerPlayer; basketIndex++)
+            for (int columnIndex = 0; columnIndex < Board.BasketsPerPlayer; columnIndex++)
             {
-                children.Add(player2Baskets[basketIndex]);
-                children.Add(player1Baskets[basketIndex]);
+                player1Baskets[columnIndex].Released += OnBasketReleased;
+                player2Baskets[columnIndex].Released += OnBasketReleased;
             }
-
-            children.Add(player1Store);
-
-            RegisterChildren(children);
-            InputManager.Instance.MouseButtonPressed += OnMouseButtonPressed;
-            UpdateControls();
         }
 
         protected override void DoUnloadContent()
-            => InputManager.Instance.MouseButtonPressed -= OnMouseButtonPressed;
+        {
+            for (int columnIndex = 0; columnIndex < Board.BasketsPerPlayer; columnIndex++)
+            {
+                player1Baskets[columnIndex].Released -= OnBasketReleased;
+                player2Baskets[columnIndex].Released -= OnBasketReleased;
+            }
+        }
 
-        protected override void DoUpdate(GameTime gameTime) => UpdateControls();
+        protected override void DoUpdate(GameTime gameTime)
+        {
+            UpdateLayout();
+            UpdateControls();
+        }
 
         protected override void DoDraw(SpriteBatch spriteBatch) { }
 
+        private void UpdateLayout()
+        {
+            int boardWidth = Size.Width;
+            int boardHeight = Size.Height;
+            int textureWidth = backgroundImage.SourceRectangle.Width;
+            int textureHeight = backgroundImage.SourceRectangle.Height;
+
+            backgroundImage.Location = Point2D.Empty;
+            backgroundImage.Size = Size;
+
+            if (textureWidth == 0 || textureHeight == 0)
+            {
+                return;
+            }
+
+            int basketSize = boardWidth * BackgroundBasketWidth / textureWidth;
+
+            // Label area is 1/3 of the basket sprite size; total control extent = 4/3 * basketSize.
+            int labelExtent = basketSize / 3;
+            int basketControlHeight = basketSize + labelExtent;
+            int storeSpriteY = (boardHeight - basketSize) / 2;
+
+            // Stores sit at the inner carpet border edges.
+            int innerMarginHorizontal = boardWidth * BackgroundInnerBorderLeft / textureWidth;
+            int innerMarginVertical = boardHeight * BackgroundInnerBorderTop / textureHeight;
+            int innerFieldWidth = boardWidth - 2 * innerMarginHorizontal;
+
+            // P2 store (left): LabelPlacement.Above → sprite is in lower 3/4; shift control up by labelExtent.
+            player2Store.Location = new Point2D(innerMarginHorizontal, storeSpriteY - labelExtent);
+            player2Store.Size = new Size2D(basketSize, basketControlHeight);
+
+            // P1 store (right): LabelPlacement.Below → sprite is in upper 3/4; control top aligns with sprite.
+            player1Store.Location = new Point2D(innerMarginHorizontal + innerFieldWidth - basketSize, storeSpriteY);
+            player1Store.Size = new Size2D(basketSize, basketControlHeight);
+
+            // Baskets are centered within the inner field between the two stores.
+            int basketGap = basketSize / 16;
+            int basketGroupWidth = Board.BasketsPerPlayer * basketSize + (Board.BasketsPerPlayer - 1) * basketGap;
+            int basketGroupStartX = innerMarginHorizontal + basketSize + (innerFieldWidth - 2 * basketSize - basketGroupWidth) / 2;
+
+            for (int columnIndex = 0; columnIndex < Board.BasketsPerPlayer; columnIndex++)
+            {
+                int basketX = basketGroupStartX + columnIndex * (basketSize + basketGap);
+
+                // P2 baskets (top row): sprite at top, label below — aligned to inner top border.
+                player2Baskets[columnIndex].Location = new Point2D(basketX, innerMarginVertical);
+                player2Baskets[columnIndex].Size = new Size2D(basketSize, basketControlHeight);
+
+                // P1 baskets (bottom row): label above, sprite at bottom — aligned to inner bottom border.
+                player1Baskets[columnIndex].Location = new Point2D(basketX, boardHeight - innerMarginVertical - basketControlHeight);
+                player1Baskets[columnIndex].Size = new Size2D(basketSize, basketControlHeight);
+            }
+        }
+
         private void UpdateControls()
         {
-            player1Store.WalnutCount = board.GetWalnuts(Board.Player1StoreIndex);
-            player1Store.IsCurrentPlayerStore = board.CurrentPlayer.Equals(Player.Player1);
-
-            player2Store.WalnutCount = board.GetWalnuts(Board.Player2StoreIndex);
-            player2Store.IsCurrentPlayerStore = board.CurrentPlayer.Equals(Player.Player2);
+            player1Store.WalnutCount = board.GetWalnuts(player1Store.BoardIndex);
+            player2Store.WalnutCount = board.GetWalnuts(player2Store.BoardIndex);
 
             for (int columnIndex = 0; columnIndex < Board.BasketsPerPlayer; columnIndex++)
             {
@@ -116,37 +159,13 @@ namespace Nucumi.Gui.Controls
             }
         }
 
-        private void OnMouseButtonPressed(object sender, MouseButtonEventArgs mouseButtonEventArgs)
+        private void OnBasketReleased(object sender, MouseButtonEventArgs mouseButtonEventArgs)
         {
-            if (!mouseButtonEventArgs.Button.Equals(MouseButton.Left))
+            GuiBasket basket = (GuiBasket)sender;
+
+            if (board.IsMoveAllowed(basket.BoardIndex))
             {
-                return;
-            }
-
-            for (int columnIndex = 0; columnIndex < Board.BasketsPerPlayer; columnIndex++)
-            {
-                GuiBasket player1Basket = player1Baskets[columnIndex];
-                GuiBasket player2Basket = player2Baskets[columnIndex];
-
-                if (player1Basket.DisplayRectangle.Contains(mouseButtonEventArgs.Location))
-                {
-                    if (board.IsMoveAllowed(player1Basket.BoardIndex))
-                    {
-                        board.Move(player1Basket.BoardIndex);
-                    }
-
-                    return;
-                }
-
-                if (player2Basket.DisplayRectangle.Contains(mouseButtonEventArgs.Location))
-                {
-                    if (board.IsMoveAllowed(player2Basket.BoardIndex))
-                    {
-                        board.Move(player2Basket.BoardIndex);
-                    }
-
-                    return;
-                }
+                board.Move(basket.BoardIndex);
             }
         }
     }
