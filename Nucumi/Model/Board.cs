@@ -36,7 +36,81 @@ namespace Nucumi.Model
             Reset();
         }
 
+        private Board(int[] existingWalnutsAtPosition, GamePhase phase, Player currentPlayer)
+        {
+            walnutsAtPosition = (int[])existingWalnutsAtPosition.Clone();
+            Phase = phase;
+            CurrentPlayer = currentPlayer;
+        }
+
+        public Board Clone() => new(walnutsAtPosition, Phase, CurrentPlayer);
+
         public int GetWalnuts(int positionIndex) => walnutsAtPosition[positionIndex];
+
+        public int GetImmediateCaptureValue(int basketIndex)
+        {
+            int walnuts = walnutsAtPosition[basketIndex];
+
+            if (walnuts == 0)
+            {
+                return 0;
+            }
+
+            bool isPlayer1Basket = basketIndex < BasketsPerPlayer;
+            int[] sequence = isPlayer1Basket ? Player1DistributionSequence : Player2DistributionSequence;
+            int startIndexInSequence = Array.IndexOf(sequence, basketIndex);
+            int landingPosition = sequence[(startIndexInSequence + walnuts) % sequence.Length];
+
+            bool isOwnEmptyBasket;
+
+            if (isPlayer1Basket)
+            {
+                isOwnEmptyBasket = landingPosition < BasketsPerPlayer && walnutsAtPosition[landingPosition] == 0;
+            }
+            else
+            {
+                isOwnEmptyBasket = landingPosition >= Player2BasketStartIndex
+                    && landingPosition <= Player2LastBasketIndex
+                    && walnutsAtPosition[landingPosition] == 0;
+            }
+
+            if (!isOwnEmptyBasket)
+            {
+                return 0;
+            }
+
+            int oppositePosition = Player2LastBasketIndex - landingPosition;
+            int oppositeWalnuts = walnutsAtPosition[oppositePosition];
+
+            if (oppositeWalnuts == 0)
+            {
+                return 0;
+            }
+
+            return oppositeWalnuts + 1;
+        }
+
+        public bool IsExtraTurnMove(int basketIndex)
+        {
+            int walnuts = walnutsAtPosition[basketIndex];
+
+            if (walnuts == 0)
+            {
+                return false;
+            }
+
+            bool isPlayer1Basket = basketIndex < BasketsPerPlayer;
+            int[] sequence = isPlayer1Basket ? Player1DistributionSequence : Player2DistributionSequence;
+            int startIndexInSequence = Array.IndexOf(sequence, basketIndex);
+            int landingPosition = sequence[(startIndexInSequence + walnuts) % sequence.Length];
+
+            if (isPlayer1Basket)
+            {
+                return Equals(landingPosition, Player1StoreIndex);
+            }
+
+            return Equals(landingPosition, Player2StoreIndex);
+        }
 
         public bool IsMoveAllowed(int basketIndex)
         {
@@ -129,7 +203,7 @@ namespace Nucumi.Model
 
             if (hasLandedInOwnEmptyBasket)
             {
-int oppositePosition = Player2LastBasketIndex - lastLandedPosition;
+                int oppositePosition = Player2LastBasketIndex - lastLandedPosition;
 
                 if (walnutsAtPosition[oppositePosition] > 0)
                 {

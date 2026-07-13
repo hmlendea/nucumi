@@ -1,3 +1,5 @@
+using System;
+
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -7,6 +9,7 @@ using NuciXNA.Gui.Screens;
 using NuciXNA.Input;
 using NuciXNA.Primitives;
 
+using Nucumi.GameLogic;
 using Nucumi.Gui.Controls;
 using Nucumi.Model;
 
@@ -15,8 +18,11 @@ namespace Nucumi.Gui.Screens
     internal sealed class GameScreen : Screen
     {
         private static int ButtonBarHeight => 64;
+        private static double AiMoveDelayMilliseconds => 1000;
 
         private readonly Board board;
+        private readonly BoardAi boardAi;
+        private TimeSpan aiMoveScheduledAt;
         private GuiButton undoButton;
         private GuiButton restartButton;
         private GuiButton infoButton;
@@ -28,6 +34,7 @@ namespace Nucumi.Gui.Screens
         {
             BackgroundColour = new Colour(20, 15, 10);
             board = new Board();
+            boardAi = new BoardAi();
         }
 
         protected override void DoLoadContent()
@@ -47,7 +54,33 @@ namespace Nucumi.Gui.Screens
 
         protected override void DoUnloadContent() => UnregisterEvents();
 
-        protected override void DoUpdate(GameTime gameTime) => SetChildrenProperties();
+        protected override void DoUpdate(GameTime gameTime)
+        {
+            SetChildrenProperties();
+
+            if (Equals(board.Phase, GamePhase.InProgress) && Equals(board.CurrentPlayer, Player.Player2))
+            {
+                if (aiMoveScheduledAt == TimeSpan.Zero)
+                {
+                    aiMoveScheduledAt = gameTime.TotalGameTime + TimeSpan.FromMilliseconds(AiMoveDelayMilliseconds);
+                }
+                else if (gameTime.TotalGameTime >= aiMoveScheduledAt)
+                {
+                    int aiMove = boardAi.ChooseMove(board);
+
+                    if (board.IsMoveAllowed(aiMove))
+                    {
+                        board.Move(aiMove);
+                    }
+
+                    aiMoveScheduledAt = TimeSpan.Zero;
+                }
+            }
+            else
+            {
+                aiMoveScheduledAt = TimeSpan.Zero;
+            }
+        }
 
         protected override void DoDraw(SpriteBatch spriteBatch) { }
 
@@ -95,11 +128,11 @@ namespace Nucumi.Gui.Screens
         {
             if (!Equals(board.Phase, GamePhase.GameOver))
             {
-                string currentPlayerName = "Player 1";
+                string currentPlayerName = "You";
 
                 if (Equals(board.CurrentPlayer, Player.Player2))
                 {
-                    currentPlayerName = "Player 2";
+                    currentPlayerName = "Computer";
                 }
 
                 return $"{currentPlayerName}'s turn";
@@ -110,19 +143,22 @@ namespace Nucumi.Gui.Screens
 
             if (player1Score > player2Score)
             {
-                return $"Game over — Player 1 wins! ({player1Score} vs {player2Score})  |  Press R to restart";
+                return $"Game over — You win! ({player1Score} vs {player2Score})  |  Press R to restart";
             }
 
             if (player2Score > player1Score)
             {
-                return $"Game over — Player 2 wins! ({player2Score} vs {player1Score})  |  Press R to restart";
+                return $"Game over — Computer wins! ({player2Score} vs {player1Score})  |  Press R to restart";
             }
 
             return $"Game over — Draw! ({player1Score} each)  |  Press R to restart";
         }
 
         private void OnRestartButtonClicked(object sender, MouseButtonEventArgs mouseButtonEventArgs)
-            => board.Reset();
+        {
+            board.Reset();
+            aiMoveScheduledAt = TimeSpan.Zero;
+        }
 
         private void OnKeyboardKeyPressed(object sender, KeyboardKeyEventArgs keyEventArgs)
         {
